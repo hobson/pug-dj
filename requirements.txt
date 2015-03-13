@@ -23,3 +23,5 @@ matplotlib==1.4.3
 #ConcurrentPandas==0.1.1
 
 Django==1.8b2
+
+pug-nlp==0.0.5
