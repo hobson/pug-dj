@@ -28,9 +28,11 @@ __url__  = env.get('__url__', 'http://github.com/hobson/')
 __authors__  = env.get('__authors__', ('Hobson <hobson@totalgood.com>',))
 try:
     import pypandoc
-    long_description = pypandoc.convert('README.md', 'rst')
-except (IOError, ImportError, OSError):
-    pass
+    long_description = pypandoc.convert('README.md', 'rst', 'md')
+except (IOError, ImportError, OSError, RuntimeError):
+    from traceback import print_exc
+    print_exc()
+    print('Unable to use pypandoc to reformat the README.md file into RST format')
 
 print('Installing package named {} from the {} project. . .'.format(package_name, project_name))
 
@@ -48,10 +50,12 @@ print('Dependency links: {}'.format(dependency_links))
 EXCLUDE_FROM_PACKAGES = []
 
 setup(
-    name=__namespace_package__,
+    name=project_name,
     packages=find_packages(exclude=EXCLUDE_FROM_PACKAGES),
     namespace_packages=[__namespace_package__],
-    include_package_data = True,  # install non-.py files listed in MANIFEST.in (.js, .html, .txt, .md, etc)
+
+    # install non-.py files listed in MANIFEST.in (.js, .html, .txt, .md, etc)
+    include_package_data = True,
     install_requires = install_requires,
     dependency_links = dependency_links,
     # scripts=['pug/bin/test_ann.py'],
@@ -70,8 +74,8 @@ setup(
     url = __url__,
 
     # Force setup.py to use the latest github master source files rather than the cheeseshop tarball: 
-    download_url = "{0}/tarball/master".format(__url__),
-    keywords = ["agent", "bot", "ai", "crawl", "data", "science", "data science", "math", "machine-learning", "statistics", "database"],
+    download_url = "{}/tarball/master".format(__url__),
+    keywords = ["django", "data", "web", "webapp", "web application", "science", "data science", "data mining"],
     classifiers = [
         "Programming Language :: Python",
         "Programming Language :: Python :: 2.7",
@@ -82,7 +86,6 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Topic :: Software Development :: Libraries :: Python Modules",
-        "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Topic :: Scientific/Engineering :: Mathematics",
         ],
 )

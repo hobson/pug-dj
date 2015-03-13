@@ -21,3 +21,5 @@ pandas==0.15.2
 Pillow==2.7
 matplotlib==1.4.3
 #ConcurrentPandas==0.1.1
+
+Django==1.8b2
