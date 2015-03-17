@@ -29,7 +29,7 @@ try:
     from django.db import models, connection, connections, router
     from django.conf import settings
     DEFAULT_APP_NAME = settings.INSTALLED_APPS[-1].split('.')[-1]
-except ImproperlyConfigured:
+except ImproperlyConfigured, IndexError:
     import traceback
     print traceback.format_exc()
     print 'WARNING: The module named %r from file %r' % (__name__, __file__)
