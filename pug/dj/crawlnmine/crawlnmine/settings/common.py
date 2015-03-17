@@ -92,7 +92,7 @@ INSTALLED_APPS = (
     'gunicorn',  # adds run_gunicorn command
 
     PROJECT_NAME, # to provide access to crawlnmine/static and crawlnmine/templates
-    'pug.miner',
+    'pug.dj.miner',
     'pug',
     'pug.invest',     # draws line plots of financial data and predicts futures finance statists
     'pug.nlp',

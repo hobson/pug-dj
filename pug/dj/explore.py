@@ -868,7 +868,7 @@ def print_cursor_table_names(cursor=None):
 class QueryTimer(object):
     r"""Based on https://github.com/jfalkner/Efficient-Django-QuerySet-Use
 
-    >>> from pug.miner.models import Database
+    >>> from pug.dj.miner.models import Database
     >>> qt = QueryTimer()
     >>> print 'If this fails, you may need to `manage.py syncdb`: %r' % list(Database.objects.values()[:1])  # doctest: +ELLIPSIS
     If this fails, you may need to `manage.py syncdb`:...
