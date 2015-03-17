@@ -1,11 +1,8 @@
 dist/
-*.egg-info/
 MANIFEST
 *.pyc
 *.sql*
-pug/nlp/pca.pickled
-.idea
+*.pickled
 nohup.out
-djangodb
-project_conf.py
 .ipynb_checkpoints/
+*.egg-info/
