@@ -19,7 +19,7 @@ def inspect_dbs(output_dir='.', db_names=None, db_aliases=None, alias_prefix='SE
     db_aliases = db_aliases or [alias_prefix + db_alias_maker(name) for name in db_names]
     for db_name, db_alias in zip(db_names, db_aliases):
         fn = os.path.join(os.path.realpath(output_dir), 'models_%s.py' % db_alias)
-        if verbosity:
+        if verbosity > 0:
             sys.stderr.write('Writing model definitions to file %r for db_alias %r.\n' % (fn, db_alias))
         models_py_buffer = StringIO()
         call_command('inspectdb', database=db_alias, verbosity=0, traceback=False, interactive=False, stdout=models_py_buffer)

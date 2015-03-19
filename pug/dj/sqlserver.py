@@ -162,7 +162,7 @@ def get_meta_table(cursor='default', table=None, verbosity=0):
             meta_table = list(list(row) for row in cursor.db.introspection.get_table_description(cursor, table))
         except DatabaseError, e:
             meta_table = []
-            if verbosity:
+            if verbosity > 0:
                 print_exc()
                 print "DatabaseError: Unable to find meta data for table %r using cursor %r (db_alias %s) because of %s." % (table, cursor, cursor.db.alias, e)
             return meta_table

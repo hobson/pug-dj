@@ -46,13 +46,13 @@ class DocTestCase(TestCase):
                 print(msg)
             else:
                 print('Rerunning tests with verbose set because there were failures.')
-                print('Because the test database may have been altered by the previous tests, this rerun may fail in differently.')
+                print('Because the test database may have been altered by the previous tests, this rerun may fail differently.')
                 self.run_doctests(module=module, verbose=True)
             self.fail(msg)
 
 
 class AllDocTests(DocTestCase):
-    fixtures = ['Building.json']
+    # fixtures = ['django-formatted-records.json']
 
     def test_models(self):
         self.run_doctests(inspect.currentframe().f_code.co_name[5:])

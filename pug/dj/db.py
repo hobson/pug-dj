@@ -134,7 +134,7 @@ def normalize_values_queryset(values_queryset, model=None, app=None, verbosity=1
                     v = unicode(v).strip()
             if isinstance(field_class, djmodels.fields.CharField):
                 if len(v) > getattr(field_class, 'max_length', 0):
-                    if verbosity:
+                    if verbosity > 0:
                         print k, v, len(v), '>', field_class.max_length
                         print 'string = %s' % repr(v)
                     # truncate strings that are too long for the database field
@@ -256,13 +256,13 @@ def get_app(app=None, verbosity=0):
             print 'Attempting django.db.models.get_app(%r)' % app
         return djmodels.get_app(app)
     except ImproperlyConfigured:
-        if verbosity:
+        if verbosity > 0:
             print 'WARNING: unable to find app = %r' % app
     if verbosity > 2:
         print 'Trying a fuzzy match on app = %r' % app
     app_names = [app_class.__package__ for app_class in djmodels.get_apps() if app_class and app_class.__package__]
     fuzzy_app_name = fuzzy.extractOne(str(app), app_names)[0]
-    if verbosity:
+    if verbosity > 0:
         print 'WARNING: Best fuzzy match for app name %r is %s' % (app, fuzzy_app_name)
     return djmodels.get_app(fuzzy_app_name.split('.')[-1])
 get_app.default = DEFAULT_APP
@@ -417,14 +417,14 @@ def copy_field(source_field, destination_field_or_model, src_pk_field=None, dest
     if skip_null:
         src=src.filter(**{source_field.name + '__isnull': False})
     N = src.count()
-    if verbosity:
+    if verbosity > 0:
         widgets = [pb.Counter(), '/%d rows: ' % (N,), pb.Percentage(), ' ', pb.RotatingMarker(), ' ', pb.Bar(),' ', pb.ETA()]
         i, pbar = 0, pb.ProgressBar(widgets=widgets, maxval=N).start()
 
     for batch_num, batch in enumerate(generate_queryset_batches(src, verbosity=verbosity)):
         updated_objects = []
         for obj in batch:
-            if verbosity:
+            if verbosity > 0:
                 pbar.update(i)
                 i += 1
             try:
@@ -445,7 +445,7 @@ def copy_field(source_field, destination_field_or_model, src_pk_field=None, dest
             print 'Fraction of objects that have been updated: %g / %d' % (sum(1 for o in updated_objects if o.rano), len(updated_objects) )
         bulk_update(updated_objects)
 
-    if verbosity:
+    if verbosity > 0:
         pbar.finish()
 
 
@@ -949,7 +949,7 @@ def diff_data(model0, model1, pk_name='pk', field_names=None, ignore_related=Tru
         qs = qs.order_by('?')
     else:
         limit = N
-    if verbosity:
+    if verbosity > 0:
         widgets = [pb.Counter(), '/%d records: ' % limit, pb.Percentage(), ' ', pb.RotatingMarker(), ' ', pb.Bar(),' ', pb.ETA()]
         i, pbar = 0, pb.ProgressBar(widgets=widgets, maxval=limit).start()
 
@@ -960,7 +960,7 @@ def diff_data(model0, model1, pk_name='pk', field_names=None, ignore_related=Tru
         if i > limit:
             break
         for obj0 in batch0:
-            if verbosity:
+            if verbosity > 0:
                 pbar.update(i)
             i += 1
             if i > limit:
@@ -1032,7 +1032,7 @@ def diff_data(model0, model1, pk_name='pk', field_names=None, ignore_related=Tru
                     print '='*20 + ' ' + str(pk) + ' ' + '='*20
                     print dict([(k, (val0, val1)) for k in mismatched_fields])
                     print '-'*50
-    if verbosity:
+    if verbosity > 0:
         pbar.finish()
     return ans
 
@@ -1451,7 +1451,7 @@ def field_dict_from_row(row, model,
                         try:
                             clean_value = field_class.to_python(value)  # FIXME: this has already been tried!
                         except:
-                            if verbosity:
+                            if verbosity > 0:
                                 print
                                 print "The row below has a value (%r) that can't be coerced by %r:" % (value, field_class.to_python)
                                 print row
@@ -1470,7 +1470,7 @@ def field_dict_from_row(row, model,
                 try:
                     assert(len(clean_value) <= field_class.max_length)
                 except:
-                    if verbosity:
+                    if verbosity > 0:
                         print
                         print "The row below has a string (%r) that is too long (> %d):" % (clean_value, max_length)
                         print row
@@ -1558,7 +1558,7 @@ def load_csv_to_model(path, model, field_names=None, delimiter=None, batch_len=1
                 header_rows += [row]
         if verbosity > 2:
             print 'HEADER: %r' % header_rows
-        if verbosity:
+        if verbosity > 0:
             N = count_lines(path, mode) - i + 10  # + 10 fudge factor in case multiple newlines in a single csv row
             widgets = [pb.Counter(), '/%d lines: ' % N, pb.Percentage(), ' ', pb.RotatingMarker(), ' ', pb.Bar(),' ', pb.ETA()]
             i, pbar = 0, pb.ProgressBar(widgets=widgets, maxval=N).start()
@@ -1590,12 +1590,12 @@ def load_csv_to_model(path, model, field_names=None, delimiter=None, batch_len=1
                     batch_of_objects += [obj]
                     errors += row_errors
                 except:
-                    if verbosity:
+                    if verbosity > 0:
                         print 'Error importing row #%d' % (i + j + 1)
                         print_exc()
                     if not ignore_errors:
                         raise
-                if verbosity:
+                if verbosity > 0:
                     try:
                         pbar.update(i + j)
                     except:
@@ -1605,9 +1605,9 @@ def load_csv_to_model(path, model, field_names=None, delimiter=None, batch_len=1
             i += len(batch_of_rows)
             if not dry_run:
                 model.objects.bulk_create(batch_of_objects)
-            elif verbosity:
+            elif verbosity > 0:
                 print "DRY_RUN: NOT bulk creating batch of %d records in %r" % (len(batch_of_objects), model)
-        if verbosity:
+        if verbosity > 0:
             pbar.finish()
     return i
 header_rows_to_ignore = [re.compile(r'^\s*[Dd]irectory\:.*$'), re.compile(r'^\s*[Nn]ame\:.*$'), re.compile(r'^\s*[-=_]+\s*$')]
@@ -1689,7 +1689,7 @@ def load_all_csvs_to_model(path, model, field_names=None, delimiter=None, batch_
 
     path = path or './'
     batch_len = batch_len or 1000
-    if verbosity:
+    if verbosity > 0:
         if dry_run:
             print 'DRY_RUN: actions will not modify the database.'
         else:
@@ -1705,7 +1705,7 @@ def load_all_csvs_to_model(path, model, field_names=None, delimiter=None, batch_
         file_dicts = sorted(file_dicts, key=itemgetter('path'))
     if verbosity > 1:
         print file_dicts
-    if verbosity:
+    if verbosity > 0:
         widgets = [pb.Counter(), '/%d bytes for all files: ' % file_bytes, pb.Percentage(), ' ', pb.RotatingMarker(), ' ', pb.Bar(),' ', pb.ETA()]
         i, pbar = 0, pb.ProgressBar(widgets=widgets, maxval=file_bytes)
         pbar.start()
@@ -1716,17 +1716,17 @@ def load_all_csvs_to_model(path, model, field_names=None, delimiter=None, batch_
             if verbosity > 1:
                 print("Skipping {0} because it's mdate is not between {1} and {2}".format(meta['path'], min_mod_date, max_mod_date))
             continue
-        if verbosity:
+        if verbosity > 0:
             print
             print 'Loading "%s"...' % meta['path']
         N += load_csv_to_model(path=meta['path'], model=model, field_names=field_names, delimiter=delimiter, batch_len=batch_len, 
                                dialect=dialect, num_header_rows=num_header_rows, mode=mode,
                                strip=strip, clear=False, dry_run=dry_run, 
                                ignore_errors=ignore_errors, verbosity=verbosity)
-        if verbosity:
+        if verbosity > 0:
             file_bytes_done += meta['size']
             pbar.update(file_bytes_done)
-    if verbosity:
+    if verbosity > 0:
         pbar.finish()
     return N
 
@@ -1899,7 +1899,7 @@ def flatten_dataframe(df, date_parser=parse_date, verbosity=0):
                 dt = i
                 parse_date_exception = True
         except:
-            if verbosity:
+            if verbosity > 0:
                 print_exc()
                 # print 'file with error: {0}\ndate-time tuple that caused the problem: {1}'.format(file_properties, d)
             dt = i
@@ -1949,16 +1949,16 @@ def clean_duplicates(model, unique_together=('serial_number',), date_field='crea
     qs = qs.order_by(*(util.listify(unique_together) + util.listify(date_field)))
     N = qs.count()
 
-    if verbosity:
+    if verbosity > 0:
         print 'Retrieving the first of %d records for %r.' % (N, model)
     qs = qs.all()
 
     i, dupes = 0, []
-    if verbosity:
+    if verbosity > 0:
         widgets = [pb.Counter(), '/%d rows: ' % N, pb.Percentage(), ' ', pb.RotatingMarker(), ' ', pb.Bar(),' ', pb.ETA()]
         pbar = pb.ProgressBar(widgets=widgets, maxval=N+1000).start()       
     for obj in qs:
-        if verbosity:
+        if verbosity > 0:
             pbar.update(i)
         if i and all([getattr(obj, f, None) == getattr(dupes[0], f, None) for f in unique_together]):
             dupes += [obj]
@@ -1975,7 +1975,7 @@ def clean_duplicates(model, unique_together=('serial_number',), date_field='crea
                 obj.save()
             dupes = [obj]
         i += 1
-    if verbosity:
+    if verbosity > 0:
         pbar.finish()
 
 
@@ -2005,7 +2005,7 @@ def delete_in_batches(queryset, batch_len=10000, verbosity=1):
     if not N:
         return N
 
-    if verbosity:
+    if verbosity > 0:
         print('Deleting %r records from %r...' % (N, queryset.model))
         widgets = [pb.Counter(), '/%d rows: ' % N, pb.Percentage(), ' ', pb.RotatingMarker(), ' ', pb.Bar(),' ', pb.ETA()]
         i, pbar = 0, pb.ProgressBar(widgets=widgets, maxval=N).start()
@@ -2061,7 +2061,7 @@ def import_items(item_seq, dest_model,  batch_len=500,
         N = len(item_seq)
 
     if not N:
-        if verbosity:
+        if verbosity > 0:
             print 'No records found in %r' % src_qs
         return N
 
@@ -2070,16 +2070,16 @@ def import_items(item_seq, dest_model,  batch_len=500,
 
     if clear and not dry_run:
         if N < dest_qs.count():
-            if verbosity:
+            if verbosity > 0:
                 print "WARNING: There are %d %r records in the destinsation queryset which is more than the %d records in the source data. So no records will be deleted/cleared in the destination!" % (dest_qs.count(), dest_model, N)
 
-        if verbosity:
+        if verbosity > 0:
             print "WARNING: Deleting %d records from %r to make room for %d new records !!!!!!!" % (dest_qs.count(), dest_model, N)
         num_deleted = delete_in_batches(dest_qs)
-        if verbosity:
+        if verbosity > 0:
             print "Finished deleting %d records in %r." % (num_deleted, dest_model)
 
-    if verbosity:
+    if verbosity > 0:
         print('Loading %r records from sequence provided...' % N)
         widgets = [pb.Counter(), '/%d rows: ' % N or 1, pb.Percentage(), ' ', pb.RotatingMarker(), ' ', pb.Bar(),' ', pb.ETA()]
         pbar = pb.ProgressBar(widgets=widgets, maxval=N)
@@ -2117,7 +2117,7 @@ def import_items(item_seq, dest_model,  batch_len=500,
                         print '------ Updating FKs with overwrite=%r --------' % overwrite
                     obj._update(save=False, overwrite=overwrite)
                 except:
-                    if verbosity:
+                    if verbosity > 0:
                         print_exc()
                         print 'ERROR: Unable to update record: %r' % obj
                     pass
@@ -2144,7 +2144,7 @@ def import_items(item_seq, dest_model,  batch_len=500,
             except UnicodeDecodeError as err:
                 from django.db import transaction
                 transaction.rollback()
-                if verbosity:
+                if verbosity > 0:
                     print '%s' % err
                     print 'Now attempting to save objects one at a time instead of as a batch...'
                 for obj in item_batch:
@@ -2163,7 +2163,7 @@ def import_items(item_seq, dest_model,  batch_len=500,
             except Exception as err:
                 from django.db import transaction
                 transaction.rollback()
-                if verbosity:
+                if verbosity > 0:
                     print '%s' % err
                     print 'Now attempting to save objects one at a time instead of as a batch...'
                 for obj in item_batch:
@@ -2187,7 +2187,7 @@ def import_items(item_seq, dest_model,  batch_len=500,
                   batch_len, src_qs.model, batch_num + 1))
         del(item_batch)
 
-    if verbosity:
+    if verbosity > 0:
         pbar.finish()
     return stats
 
@@ -2207,14 +2207,14 @@ def update_items(item_seq,  batch_len=500, dry_run=True, start_batch=0, end_batc
         N = item_seq.count()
 
     if not N:
-        if verbosity:
+        if verbosity > 0:
             print 'No records found in %r' % src_qs
         return N
 
     # make sure there's a valid last batch number so the verbose messages will make sense
     end_batch = end_batch or int(N / float(batch_len))
 
-    if verbosity:
+    if verbosity > 0:
         print('Updating from a source queryset/model/sequence with %r records...' % N)
         widgets = [pb.Counter(), '/%d rows: ' % N or 1, pb.Percentage(), ' ', pb.RotatingMarker(), ' ', pb.Bar(),' ', pb.ETA()]
         pbar = pb.ProgressBar(widgets=widgets, maxval=N).start()
@@ -2231,7 +2231,7 @@ def update_items(item_seq,  batch_len=500, dry_run=True, start_batch=0, end_batc
                 if hasattr(obj, '_update'):
                     obj._update(save=False, overwrite=False)
             except:
-                if verbosity:
+                if verbosity > 0:
                     print_exc()
                     print 'ERROR: Unable to update record: %r' % obj
                 pass
@@ -2269,7 +2269,7 @@ def update_items(item_seq,  batch_len=500, dry_run=True, start_batch=0, end_batc
             print('Retrieving {0} {1} items for the next batch, batch number {2}...'.format(
                 batch_len, src_qs.model, batch_num + 1))
 
-    if verbosity:
+    if verbosity > 0:
         pbar.finish()
     return stats
 
@@ -2301,7 +2301,7 @@ def import_queryset_batches(qs, dest_qs,  batch_len=500, clear=None, dry_run=Tru
 
     N = qs.count()
 
-    if verbosity:
+    if verbosity > 0:
         print('Loading %r records from the queryset provided...' % N)
     qs = qs.values()
 
@@ -2310,10 +2310,10 @@ def import_queryset_batches(qs, dest_qs,  batch_len=500, clear=None, dry_run=Tru
     if clear and not dry_run:
         if clear == True:
             clear = dest_model.objects.all()
-        if verbosity:
+        if verbosity > 0:
             print "WARNING: Deleting %d records from %r !!!!!!!" % (clear.count(), clear.model)
         clear.delete()
-    if verbosity:
+    if verbosity > 0:
         widgets = [pb.Counter(), '/%d rows: ' % N, pb.Percentage(), ' ', pb.RotatingMarker(), ' ', pb.Bar(),' ', pb.ETA()]
         pbar = pb.ProgressBar(widgets=widgets, maxval=N).start()
     for batch_num, dict_batch in enumerate(generate_queryset_batches(qs, batch_len)):
@@ -2336,7 +2336,7 @@ def import_queryset_batches(qs, dest_qs,  batch_len=500, clear=None, dry_run=Tru
                 len(item_batch), batch_num, int(N / float(batch_len)), dest_model))
         if not dry_run:
             dest_model.objects.bulk_create(item_batch)
-    if verbosity:
+    if verbosity > 0:
         pbar.finish()
 
 #from django.db.models.fields.related import ForeignKey
@@ -2354,14 +2354,14 @@ def import_queryset(qs, dest_model,  clear=False, dry_run=True, verbosity=1):
         pass
     N = qs.count()
 
-    if verbosity:
+    if verbosity > 0:
         print('Loading %r records from the queryset provided...' % N)
 
     if clear and not dry_run:
-        if verbosity:
+        if verbosity > 0:
             print "WARNING: Deleting %d records from %r !!!!!!!" % (dest_model.objects.count(), dest_model)
         dest_model.objects.all().delete()
-    if verbosity:
+    if verbosity > 0:
         widgets = [pb.Counter(), '/%d rows: ' % N, pb.Percentage(), ' ', pb.RotatingMarker(), ' ', pb.Bar(),' ', pb.ETA()]
         pbar = pb.ProgressBar(widgets=widgets, maxval=N).start()
     i = 0
@@ -2370,14 +2370,14 @@ def import_queryset(qs, dest_model,  clear=False, dry_run=True, verbosity=1):
         if verbosity > 2:
             print(repr(d))
         m = django_object_from_row(d, dest_model)
-        if verbosity:
+        if verbosity > 0:
             pbar.update(i)
             i += 1
             if verbosity > 2:
                 print m
         if not dry_run:
             m.save()
-    if verbosity:
+    if verbosity > 0:
         pbar.finish()
 
 
@@ -2411,14 +2411,14 @@ def import_queryset_untested(dest_model, queryset, model_app=None, nullify_pk=Tr
         N = len(queryset)
 
     if clear and not dry_run:
-        if verbosity:
+        if verbosity > 0:
             print "WARNING: Deleting %d records from %r to make room for %d new records !!!!!!!" % (dest_model.objects.count(), dest_model, N)
         num_deleted = delete_in_batches(dest_model.objects.all())
-        if verbosity:
+        if verbosity > 0:
             print "Finished deleting %d records in %r." % (num_deleted, dest_model)
 
 
-    if verbosity:
+    if verbosity > 0:
         print 'Loading %d objects from %r into %r ...' % (queryset.count(), queryset.model, dest_model)
     # to change the model in a json fixture file:
     # sed -e 's/^\ \"pk\"\:\ \".*\"\,/"pk": null,/g' -i '' *.json
@@ -2431,7 +2431,7 @@ def import_queryset_untested(dest_model, queryset, model_app=None, nullify_pk=Tr
     jser = JSONSerializer()
 
 
-    if verbosity:
+    if verbosity > 0:
         widgets = [pb.Counter(), '/%d rows: ' % N, pb.Percentage(), ' ', pb.RotatingMarker(), ' ', pb.Bar(),' ', pb.ETA()]
         i, pbar = 0, pb.ProgressBar(widgets=widgets, maxval=N).start()
 
@@ -2452,14 +2452,14 @@ def import_queryset_untested(dest_model, queryset, model_app=None, nullify_pk=Tr
         # objects = serializers.deserialize('json', <fixture_file_pointer>, using=<database_dbname_from_settings>, ignorenonexistent=ignore)
         # for obj in objects: obj.save()
         new_objects = list(serializers.deserialize("json", js))
-        if verbosity:
+        if verbosity > 0:
             print '---------- DESTINATION OBJECTS ----------------'
             print new_objects
         for obj in new_objects:
             obj.pk = i + 1
             i += 1
         dest_model.objects.bulk_create(new_objects)
-        if verbosity:
+        if verbosity > 0:
             print '%d objects created. %d total.' % (len(new_objects), dest_model.objects.count())
 
         # # If you get AttributeError: DeserializedObject has no attrribute "pk"
@@ -2546,10 +2546,10 @@ def import_json(path, model, batch_len=100, db_alias='default', start_batch=0, e
     """Read json file (not in django fixture format) and create the appropriate records using the provided database model."""
 
     # TODO: use a generator to save memory for large json files/databases
-    if verbosity:
+    if verbosity > 0:
         print('Reading json records (dictionaries) from {0}.'.format(repr(path)))
     item_list = json.load(open(path, 'r'))
-    if verbosity:
+    if verbosity > 0:
         print('Finished reading {0} items from {1}.'.format(len(item_list), repr(path)))
     import_items(item_list, model=model, batch_len=batch_len, db_alias=db_alias, start_batch=start_batch, end_batch=end_batch, ignore_errors=ignore_errors, verbosity=verbosity)
 
@@ -2583,7 +2583,7 @@ def bulk_update(object_list, ignore_errors=False, delete_first=False, verbosity=
         print 'BEFORE: %d' % model.objects.count()
     if not delete_first:
         model.objects.bulk_create(object_list)
-    if verbosity:
+    if verbosity > 0:
         print 'Deleting %d objects with pks: %r ........' % (len(pks_to_delete), pks_to_delete)
     objs_to_delete = model.objects.filter(pk__in=pks_to_delete)
     num_to_delete = objs_to_delete.count()
@@ -2591,7 +2591,7 @@ def bulk_update(object_list, ignore_errors=False, delete_first=False, verbosity=
         msg = 'Attempt to delete redundant pks (len %d)! Queryset has count %d. Query was `filter(pk__in=%r). Queryset = %r' % (
             len(pks_to_delete), num_to_delete, pks_to_delete, objs_to_delete)
         if ignore_errors:
-            if verbosity:
+            if verbosity > 0:
                 print msg
         else:
             raise RuntimeError(msg)
@@ -2637,7 +2637,7 @@ def generate_queryset_batches(queryset, batch_len=1000, verbosity=1):
         for obj in queryset:
             yield obj
 
-    if verbosity:
+    if verbosity > 0:
         widgets = [pb.Counter(), '/%d rows: ' % N, pb.Percentage(), ' ', pb.RotatingMarker(), ' ', pb.Bar(),' ', pb.ETA()]
         i, pbar = 0, pb.ProgressBar(widgets=widgets, maxval=N).start()
     pk_queryset = queryset.filter(pk__isnull=False).values_list('pk', flat=True).order_by('pk')
@@ -2661,7 +2661,7 @@ def generate_queryset_batches(queryset, batch_len=1000, verbosity=1):
         del(nonnull_pk_list)
         print 'Yielding the %d batches according to the %d dividing (fencepost) primary keys...' % (N_batches, len(pk_list))
     for j in range(N_batches):
-        if verbosity:
+        if verbosity > 0:
             pbar.update(i)
         if j < N_batches - 1:
             i += batch_len
@@ -2669,7 +2669,7 @@ def generate_queryset_batches(queryset, batch_len=1000, verbosity=1):
             i += last_batch_len
         # inclusive inequality ensures that even if PKs are repeated they will all be included in the queryset returned
         yield queryset.filter(pk__gte=pk_list[j][0], pk__lte=pk_list[j][1])
-    if verbosity:
+    if verbosity > 0:
         pbar.finish()
 
 
@@ -2828,21 +2828,21 @@ def dump_json(model, batch_len=200000, use_natural_keys=True, verbosity=1):
 
     N = model.objects.count()
 
-    if verbosity:
+    if verbosity > 0:
         widgets = [pb.Counter(), '/%d rows: ' % (N,), pb.Percentage(), ' ', pb.RotatingMarker(), ' ', pb.Bar(),' ', pb.ETA()]
         i, pbar = 0, pb.ProgressBar(widgets=widgets, maxval=N).start()
 
     JSONSerializer = serializers.get_serializer("json")
     jser = JSONSerializer()
 
-    if verbosity:
+    if verbosity > 0:
         pbar.update(0)
     for i, partial_qs in enumerate(util.generate_slices(model.objects.all(), batch_len=batch_len)):
         with open(model._meta.app_label.lower() + '--' + model._meta.object_name.lower() + '--%04d.json' % i, 'w') as fpout:
-            if verbosity:
+            if verbosity > 0:
                 pbar.update(i*batch_len)
             jser.serialize(partial_qs, indent=1, stream=fpout, use_natural_keys=use_natural_keys)
-    if verbosity:
+    if verbosity > 0:
         pbar.finish()
 
 

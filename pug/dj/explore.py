@@ -146,14 +146,14 @@ def get_db_meta(app=DEFAULT_APP_NAME, db_alias=None, table=None, verbosity=0, co
     >>> get_db_meta('crawler', db_alias='default', table='crawler_wikiitem')  # doctest: +ELLIPSIS
     OrderedDict([('WikiItem', OrderedDict([('Meta', OrderedDict([('primary_key', None), ('count', 1332), ('db_table', u'crawler_wikiitem')])), (u'id', OrderedDict([('name', u'id'), ('type', ...
     """
-    if verbosity:
+    if verbosity > 0:
         print 'Looking for app %r.' % (app, )
     if app and isinstance(app, basestring):
         app = djdb.get_app(app, verbosity=verbosity)
     else:
         app = djdb.get_app('')
     model_names = list(mc.__name__ for mc in models.get_models(app))
-    if verbosity:
+    if verbosity > 0:
         print 'Found %d models for app %r.' % (len(model_names), app)
     meta = OrderedDict()
     # inspectdb uses: for table_name in connection.introspection.table_names(cursor):
@@ -182,7 +182,7 @@ def get_db_meta(app=DEFAULT_APP_NAME, db_alias=None, table=None, verbosity=0, co
                 print 'Trying to count records in model %r and db_alias %r' % (model, model_db_alias)
             count = queryset.count()
         except DatabaseError as e:
-            if verbosity:
+            if verbosity > 0:
                 print_exc()
                 print "DatabaseError: Unable to count records for model '%s' (%s) because of %s." % (model.__name__, repr(model), e)
             transaction.rollback()
@@ -235,7 +235,7 @@ def get_model_meta(model, app=DEFAULT_APP_NAME, db_alias=None, column_name_filte
             print 'Trying to count records in model %r and db_alias %r' % (model, db_alias)
         count = queryset.count()
     except DatabaseError as e:
-        if verbosity:
+        if verbosity > 0:
             print_exc()
             print "DatabaseError: Unable to count records for model '%s' (%s) because of %s." % (model.__name__, repr(model), e)
         transaction.rollback()
@@ -285,7 +285,7 @@ def augment_model_meta(model, db_alias, model_meta, column_name_filters=None, co
         except FieldDoesNotExist:
             db_column = None
         if not field:
-            if verbosity:
+            if verbosity > 0:
                 print "WARNING: Skipped 'phantom' field named '%s'.  This is likely because of a ForeignKey relationship elsewhere back to this model (%r). No field found in the model '%s' for database '%s'." % (field_name, model, model.__name__, db_alias)
             continue
         if not db_column:
@@ -296,12 +296,12 @@ def augment_model_meta(model, db_alias, model_meta, column_name_filters=None, co
             elif field.name.upper() in model_meta:
                 db_column = field.name.upper()
         if not db_column:
-            if verbosity:
+            if verbosity > 0:
                 print "WARNING: Skipped field named '%s'. No column found in the database.table '%s.%s'." % (field.name, db_alias, model.__name__)
             continue
         if column_name_filters:
             if not any(((callable(cnf) and cnf(db_column)) or (db_column == cnf)) for cnf in column_name_filters):
-                if verbosity:
+                if verbosity > 0:
                     print "WARNING: Skipped field named '%s' for table '%s.%s' because it didn't match any filters: %r." % (field.name, db_alias, model.__name__, column_name_filters)
                 continue
         if (field.name == 'id' and isinstance(field, models.fields.AutoField)
@@ -365,7 +365,7 @@ def augment_field_meta(field, queryset, field_properties, verbosity=0, count=0):
             field_properties['num_null'] = queryset.filter(**{'%s__isnull' % field.name: True}).count()
             field_properties['fraction_distinct'] = float(field_properties['num_distinct']) / (count or 1)
         except DatabaseError as e:
-            if verbosity:
+            if verbosity > 0:
                 print_exc()
                 print "DatabaseError: Skipped count of values in field named '%s' (%s) because of %s." % (field.name, repr(field.db_column), e)
             transaction.rollback()
@@ -380,7 +380,7 @@ def augment_field_meta(field, queryset, field_properties, verbosity=0, count=0):
                                                      [:min(field_properties['num_distinct'], 10)]
                                                     ]
         except (StandardError, FieldError, DatabaseError) as e:
-            if verbosity:
+            if verbosity > 0:
                 print "Warning: Failed to calculate the Top-10 histogram for field named '%s' (%s) because of %s." % (field.name, repr(field.db_column), e)
             if verbosity > 2:
                 print_exc()
@@ -396,12 +396,12 @@ def augment_field_meta(field, queryset, field_properties, verbosity=0, count=0):
             field_properties['max'] = db.clean_utf8(queryset.aggregate(max_value=models.Max(field.name))['max_value'])
             field_properties['min'] = db.clean_utf8(queryset.aggregate(min_value=models.Min(field.name))['min_value'])
         except ValueError as e:
-            if verbosity:
+            if verbosity > 0:
                 print_exc()
                 print "ValueError (perhaps UnicodeDecodeError?): Skipped max/min calculations for field named '%s' (%s) because of %s." % (field.name, repr(field.db_column), e)
             transaction.rollback()
         except DatabaseError, e:
-            if verbosity:
+            if verbosity > 0:
                 print_exc()
                 print "DatabaseError: Skipped max/min calculations for field named '%s' (%s) because of %s." % (field.name, repr(field.db_column), e)
             transaction.rollback()
@@ -429,7 +429,7 @@ def index_with_dupes(values_list, unique_together=2, model_number_i=0, serial_nu
         N = values_list.count()
     except:
         N = len(values_list)
-    if verbosity:
+    if verbosity > 0:
         print 'Indexing %d values_lists in a queryset or a sequence of Django model instances (database table rows).' % N
     index, dupes = {}, {}
     pbar = None
@@ -456,7 +456,7 @@ def index_with_dupes(values_list, unique_together=2, model_number_i=0, serial_nu
         rownum += 1
     if pbar:
         pbar.finish()
-    if verbosity:
+    if verbosity > 0:
         print 'Found %d duplicate model-serial pairs in the %d records or %g%%' % (len(dupes), len(index), len(dupes)*100./(len(index) or 1.))
     return index, dupes
 
@@ -470,7 +470,7 @@ def index_model_field(model, field, value_field='pk', key_formatter=str.strip, v
         qs = model
 
     N = qs.count()
-    if verbosity:
+    if verbosity > 0:
         print 'Indexing %d rows to aid in finding %s.%s values using %s.%s.' % (N, qs.model.__name__, value_field, qs.model.__name__, field)
 
     index, dupes, rownum = {}, {}, 0
@@ -508,7 +508,7 @@ def index_model_field(model, field, value_field='pk', key_formatter=str.strip, v
             pbar.update(rownum)
     if pbar:
         pbar.finish()
-    if verbosity:
+    if verbosity > 0:
         print 'Found %d duplicate %s values among the %d records or %g%%' % (len(dupes), field, len(index), len(dupes)*100./(len(index) or 1.))
     return index, dupes
 
@@ -528,7 +528,7 @@ def index_model_field_batches(model_or_queryset, key_fields=['model_number', 'se
     qs = djdb.get_queryset(model_or_queryset)
 
     N = qs.count()
-    if verbosity:
+    if verbosity > 0:
         print 'Indexing %d rows (database records) to aid in finding record %r values using the field %r.' % (N, value_fields, key_fields)
 
     index, dupes, rownum = {}, {}, 0
@@ -572,7 +572,7 @@ def index_model_field_batches(model_or_queryset, key_fields=['model_number', 'se
                 break
     if pbar:
         pbar.finish()
-    if verbosity:
+    if verbosity > 0:
         print 'Found %d duplicate %s values among the %d records or %g%%' % (len(dupes), key_fields, len(index), len(dupes)*100./(len(index) or 1.))
     return index, dupes
 
