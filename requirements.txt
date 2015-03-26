@@ -16,13 +16,13 @@ pyOpenSSL==0.14
 pytz==2014.10
 python-dateutil==2.4.0
 
-numpy==1.9.2
-pandas==0.15.2
+numpy>=1.9.2
+pandas>=0.15.2
 
-Pillow==2.7
-matplotlib==1.4.3
+Pillow>=2.7
+matplotlib>=1.4.3
 #ConcurrentPandas==0.1.1
 
-Django==1.8b2
+Django>=1.7.7
 
-pug-nlp==0.0.5
+pug-nlp>=0.0.12
