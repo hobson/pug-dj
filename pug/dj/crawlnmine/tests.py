@@ -54,11 +54,11 @@ class DocTestCase(TestCase):
 class AllDocTests(DocTestCase):
     # fixtures = ['django-formatted-records.json']
 
-    def test_models(self):
-        self.run_doctests(inspect.currentframe().f_code.co_name[5:])
+    # def test_models(self):
+    #     self.run_doctests(inspect.currentframe().f_code.co_name[5:])
 
-    def test_views(self):
-        self.run_doctests(inspect.currentframe().f_code.co_name[5:])
+    # def test_views(self):
+    #     self.run_doctests(inspect.currentframe().f_code.co_name[5:])
 
     def test_urls(self):
         self.run_doctests(inspect.currentframe().f_code.co_name[5:])
