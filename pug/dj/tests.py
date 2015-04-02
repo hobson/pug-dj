@@ -6,7 +6,7 @@ installed_packages = pip.get_installed_distributions()
 installed_packages_list = sorted(["%s==%s" % (i.key, i.version) for i in installed_packages])
 print('Available packages for import!!!!!!!!!')
 print(installed_packages_list)
-from pug.dj.crawlnmine.crawlnmine import urls
+# from pug.dj.crawlnmine.crawlnmine import urls
 
 class ANNDocTest(TestCase):
 
@@ -24,7 +24,7 @@ class ANNDocTest(TestCase):
     #     self.test_module(urls)
 
     def test_null(self):
-        pass
+        self.assertEqual(1+1,2)
 
 if __name__ == '__main__':
     main()
