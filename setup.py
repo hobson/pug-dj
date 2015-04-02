@@ -67,10 +67,13 @@ install_requires = [
     'matplotlib==1.4.3',
     'numpy==1.9.2',
 
-    'Django>=1.7.7',
-    'django-extensions>=1.5.2',
-    'gunicorn',
-    'jsonfield',
+    'sqlparse>=0.1.14',
+    'Django==1.7.7',
+    'django-extensions==1.5.2',
+    'gunicorn==19.3.0',
+    'jsonfield==1.0.3',
+
+    'pug-nlp>=0.0.17',
     ]
 print('install_requires: {}'.format(install_requires))
 
