@@ -25,4 +25,4 @@ matplotlib>=1.4.3
 
 Django>=1.7.7
 
-pug-nlp>=0.0.12
+pug-nlp>=0.0.19
