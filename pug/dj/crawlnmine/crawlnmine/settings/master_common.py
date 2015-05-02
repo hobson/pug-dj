@@ -52,7 +52,7 @@ if ROOT_PROJECT_PATH not in sys.path:
 
 
 # If there's an environment variable containing a secret key it'll be used, otherwise a random one will be generated
-NEW_SECRET_KEY = ''.join(random.choice(string.printable) for _ in range(32))
+NEW_SECRET_KEY = ''.join(random.choice(string.ascii_letters + string.digits + r'.!@#%^&*()-_+=:;<>/?~[]') for _ in range(32))
 SECRET_KEY = env("DJANGO_SECRET_KEY", default=NEW_SECRET_KEY)  # os.urandom(32) isn't terminal printable
 
 # Heroku: Honor the 'X-Forwarded-Proto' header for request.is_secure()

@@ -25,7 +25,7 @@ from django import http
 # from django.shortcuts import render
 # from django.conf import settings
 
-from pug.nlp import parse
+from pug.nlp import parse_graph_url as parse
 from pug.nlp import util
 from pug.nlp import db
 

@@ -2,9 +2,9 @@
 include *.txt
 recursive-include requirements *.txt
 include *.md
-# recursive-include . *.md
+# recursive-include * *.md
 include *.rst
-# recursive-include . *.rst
+# recursive-include * *.rst
 recursive-include pug/dj/data *
 include README.*
 
