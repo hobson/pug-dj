@@ -23,6 +23,6 @@ Pillow>=2.7
 matplotlib>=1.4.3
 #ConcurrentPandas==0.1.1
 
-Django>=1.7.7
+Django>=1.8.1
 
 pug-nlp>=0.0.19
